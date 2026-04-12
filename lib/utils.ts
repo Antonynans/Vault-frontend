@@ -10,10 +10,11 @@ const currencySymbols: Record<string, string> = {
 
 export function formatCurrency(amount: number, currency = "NGN"): string {
   const symbol = currencySymbols[currency] || currency;
+  const value = Number(amount);
   const formatted = new Intl.NumberFormat("en-NG", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(Math.abs(amount) / 100); // amounts stored in kobo/cents
+  }).format((isNaN(value) ? 0 : Math.abs(value)) / 100);
   return `${symbol}${formatted}`;
 }
 
