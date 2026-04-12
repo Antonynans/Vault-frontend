@@ -155,3 +155,34 @@ body {
 }
 .animate-fade-up { animation: fadeUp 0.5s ease forwards; }
 .animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+
+.sidebar-item { position: relative; transition: all 0.2s ease; }
+.sidebar-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0;
+  background: var(--gold);
+  border-radius: 0 2px 2px 0;
+  transition: height 0.25s ease;
+}
+.sidebar-item.active::before { height: 55%; }
+.sidebar-item.active { background: var(--gold-dim); color: var(--gold); }
+
+.vault-table th {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+}
+.vault-table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+.vault-table tr:last-child td { border-bottom: none; }
+.vault-table tbody tr:hover td { background: rgba(255,255,255,0.015); }
