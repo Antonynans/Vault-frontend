@@ -49,9 +49,19 @@ export interface WalletLimits {
 
 export interface Notification {
   id: string;
+  userId: string;
+  type: string;
+  channel: string;
+  status: string;
   title: string;
-  message: string;
+  body: string;       // ← add if missing
+  message?: string;
+  data?: {
+    amount?: number;
+    transactionId?: string;
+  };
   isRead: boolean;
+  readAt: string | null;
   createdAt: string;
 }
 
