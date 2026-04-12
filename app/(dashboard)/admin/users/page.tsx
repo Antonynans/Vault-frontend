@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, UserX, RefreshCw } from "lucide-react";
+import { Search, UserX, RefreshCw, MoreVertical } from "lucide-react";
 import { usersApi } from "@/lib/api";
 import { User } from "@/lib/types";
 import { formatDate, getInitials } from "@/lib/utils";
@@ -20,11 +20,22 @@ export default function AdminUsersPage() {
   const [total, setTotal] = useState(0);
   const [confirmUser, setConfirmUser] = useState<User | null>(null);
   const [deactivating, setDeactivating] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const limit = 20;
 
   useEffect(() => {
     fetchUsers();
   }, [page]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest("[data-dropdown]")) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -94,7 +105,6 @@ export default function AdminUsersPage() {
         </Button>
       </div>
 
-      {/* Search */}
       <div className="glass rounded-2xl p-4 mb-6">
         <div className="relative">
           <Search
@@ -111,7 +121,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -187,15 +196,60 @@ export default function AdminUsersPage() {
                       </Badge>
                     </td>
                     <td className="text-right">
-                      {u.isActive && u.role !== "admin" && (
-                        <button
-                          onClick={() => setConfirmUser(u)}
-                          className="p-2 rounded-lg hover:bg-(--red-dim) transition-colors"
-                          style={{ color: "var(--text-muted)" }}
+                      <div className="relative" data-dropdown>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdown(
+                              openDropdown === u.id ? null : u.id,
+                            );
+                          }}
+                          className="p-2"
                         >
-                          <UserX size={15} className="hover:text-(--red)" />
-                        </button>
-                      )}
+                          <MoreVertical size={15} />
+                        </Button>
+
+                        {openDropdown === u.id && (
+                          <div
+                            className="absolute right-0 top-full mt-1 w-40 rounded-xl shadow-xl z-20 overflow-hidden"
+                            style={{
+                              background: "var(--bg-secondary)",
+                              border: "1px solid var(--border)",
+                              animation: "fadeSlideDown 0.12s ease",
+                            }}
+                          >
+                            {/* Deactivate — only for active non-admins */}
+                            {u.isActive && u.role !== "admin" ? (
+                              <button
+                                onClick={() => {
+                                  setConfirmUser(u);
+                                  setOpenDropdown(null);
+                                }}
+                                className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2 transition-colors hover:bg-red-500/10 group"
+                                style={{ color: "var(--text-secondary)" }}
+                              >
+                                <UserX
+                                  size={14}
+                                  className="group-hover:text-red-400 transition-colors"
+                                  style={{ color: "var(--text-muted)" }}
+                                />
+                                <span className="group-hover:text-red-400 transition-colors">
+                                  Deactivate
+                                </span>
+                              </button>
+                            ) : (
+                              <div
+                                className="px-3 py-2.5 text-sm"
+                                style={{ color: "var(--text-muted)" }}
+                              >
+                                No actions
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
