@@ -8,10 +8,8 @@ import { formatCurrency } from "@/lib/utils";
 import AppShell from "@/components/layout/AppShell";
 import AccountCard from "@/components/dashboard/AccountCard";
 import Button from "@/components/ui/Button";
-import Modal from "@/components/ui/Modal";
-import Select from "@/components/ui/Select";
-import Input from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
+import OpenAccountModal from "@/components/modals/OpenAccountModal";
 
 export default function AccountsPage() {
   const { add } = useToast();
@@ -19,9 +17,6 @@ export default function AccountsPage() {
   const [limits, setLimits] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [currency, setCurrency] = useState("NGN");
-  const [name, setName] = useState("");
-  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchAccounts();
@@ -50,22 +45,6 @@ export default function AccountsPage() {
     }
   };
 
-  const handleCreate = async () => {
-    setCreating(true);
-    try {
-      await accountsApi.create({ currency, name: name || undefined });
-      add("success", `${currency} account created!`);
-      setShowCreate(false);
-      setCurrency("NGN");
-      setName("");
-      fetchAccounts();
-    } catch (err: any) {
-      add("error", err?.response?.data?.message || "Failed");
-    } finally {
-      setCreating(false);
-    }
-  };
-
   const handleFreeze = async (id: string) => {
     try {
       await accountsApi.freeze(id);
@@ -80,8 +59,8 @@ export default function AccountsPage() {
       await accountsApi.unfreeze(id);
       add("success", "Account unfrozen");
       fetchAccounts();
-    } catch {
-      add("error", "Failed");
+    } catch (err: any) {
+      add("error", err?.response?.data?.message);
     }
   };
 
@@ -240,42 +219,11 @@ export default function AccountsPage() {
         </div>
       )}
 
-      <Modal
-        open={showCreate}
-        onClose={() => setShowCreate(false)}
-        title="Open New Account"
-      >
-        <div className="space-y-4">
-          <Select
-            label="Currency"
-            options={["NGN", "USD", "GBP", "EUR"].map((c) => ({
-              value: c,
-              label: `${c} — ${c === "NGN" ? "Nigerian Naira" : c === "USD" ? "US Dollar" : c === "GBP" ? "British Pound" : "Euro"}`,
-            }))}
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-          />
-          <Input
-            label="Account Name (optional)"
-            placeholder="e.g. Savings, Business…"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <div
-            className="glass rounded-xl p-4 text-sm"
-            style={{ color: "var(--text-muted)" }}
-          >
-            <p>
-              New accounts start with{" "}
-              <strong style={{ color: "var(--gold)" }}>Basic</strong> wallet
-              tier. Complete KYC to upgrade limits.
-            </p>
-          </div>
-          <Button loading={creating} onClick={handleCreate} className="w-full">
-            Open Account
-          </Button>
-        </div>
-      </Modal>
+      <OpenAccountModal
+        fetchAccounts={fetchAccounts}
+        setShowCreate={setShowCreate}
+        showCreate={showCreate}
+      />
     </AppShell>
   );
 }

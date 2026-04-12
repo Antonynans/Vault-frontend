@@ -18,9 +18,6 @@ import StatCard from "@/components/dashboard/StatCard";
 import AccountCard from "@/components/dashboard/AccountCard";
 import TransactionRow from "@/components/dashboard/TransactionRow";
 import Button from "@/components/ui/Button";
-import Modal from "@/components/ui/Modal";
-import Select from "@/components/ui/Select";
-import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import AppShell from "@/components/layout/AppShell";
@@ -33,6 +30,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import OpenAccountModal from "@/components/modals/OpenAccountModal";
+import DepositModal from "@/components/modals/DepositModal";
+import TransferModal from "@/components/modals/TransferModal";
+import { toNGN } from "@/lib/fx";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -44,15 +45,8 @@ export default function DashboardPage() {
   const [showCreateAccount, setShowCreateAccount] = useState(false);
   const [showDeposit, setShowDeposit] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
-  const [newCurrency, setNewCurrency] = useState("NGN");
-  const [newName, setNewName] = useState("");
   const [depositForm, setDepositForm] = useState({ accountId: "", amount: "" });
-  const [transferForm, setTransferForm] = useState({
-    fromAccountId: "",
-    toAccountId: "",
-    amount: "",
-    description: "",
-  });
+
   const [formLoading, setFormLoading] = useState(false);
 
   // Fake chart data
@@ -89,76 +83,9 @@ export default function DashboardPage() {
   };
 
   const totalBalance = accounts.reduce(
-    (s, a) => s + (a.currency === "NGN" ? a.balance : 0),
+    (sum, a) => sum + toNGN(Number(a.balance), a.currency),
     0,
   );
-
-  const handleCreateAccount = async () => {
-    setFormLoading(true);
-    try {
-      await accountsApi.create({
-        currency: newCurrency,
-        name: newName || undefined,
-      });
-      add("success", `${newCurrency} account created!`);
-      setShowCreateAccount(false);
-      fetchData();
-    } catch (err: any) {
-      add("error", err?.response?.data?.message || "Failed to create account");
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleDeposit = async () => {
-    if (!depositForm.accountId || !depositForm.amount) return;
-    setFormLoading(true);
-    try {
-      await transactionsApi.deposit({
-        accountId: depositForm.accountId,
-        amount: parseFloat(depositForm.amount) * 100,
-      });
-      add("success", "Deposit successful!");
-      setShowDeposit(false);
-      setDepositForm({ accountId: "", amount: "" });
-      fetchData();
-    } catch (err: any) {
-      add("error", err?.response?.data?.message || "Deposit failed");
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleTransfer = async () => {
-    if (
-      !transferForm.fromAccountId ||
-      !transferForm.toAccountId ||
-      !transferForm.amount
-    )
-      return;
-    setFormLoading(true);
-    try {
-      await transactionsApi.transfer({
-        fromAccountId: transferForm.fromAccountId,
-        toAccountId: transferForm.toAccountId,
-        amount: parseFloat(transferForm.amount) * 100,
-        description: transferForm.description,
-      });
-      add("success", "Transfer successful!");
-      setShowTransfer(false);
-      setTransferForm({
-        fromAccountId: "",
-        toAccountId: "",
-        amount: "",
-        description: "",
-      });
-      fetchData();
-    } catch (err: any) {
-      add("error", err?.response?.data?.message || "Transfer failed");
-    } finally {
-      setFormLoading(false);
-    }
-  };
 
   const accountOptions = accounts.map((a) => ({
     value: a.id,
@@ -542,125 +469,31 @@ export default function DashboardPage() {
         )}
       </motion.div>
 
-      {/* Modals */}
-      <Modal
-        open={showCreateAccount}
-        onClose={() => setShowCreateAccount(false)}
-        title="Open New Account"
-      >
-        <div className="space-y-4">
-          <Select
-            label="Currency"
-            options={["NGN", "USD", "GBP", "EUR"].map((c) => ({
-              value: c,
-              label: c,
-            }))}
-            value={newCurrency}
-            onChange={(e) => setNewCurrency(e.target.value)}
-          />
-          <Input
-            label="Account Name (optional)"
-            placeholder="e.g. Savings, Business..."
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-          />
-          <Button
-            loading={formLoading}
-            onClick={handleCreateAccount}
-            className="w-full"
-          >
-            Open Account
-          </Button>
-        </div>
-      </Modal>
+      <OpenAccountModal
+        fetchAccounts={fetchData}
+        setShowCreate={setShowCreateAccount}
+        showCreate={showCreateAccount}
+      />
 
-      <Modal
-        open={showDeposit}
-        onClose={() => setShowDeposit(false)}
-        title="Deposit Funds"
-      >
-        <div className="space-y-4">
-          <Select
-            label="Account"
-            options={[
-              { value: "", label: "Select account..." },
-              ...accountOptions,
-            ]}
-            value={depositForm.accountId}
-            onChange={(e) =>
-              setDepositForm((f) => ({ ...f, accountId: e.target.value }))
-            }
-          />
-          <Input
-            label="Amount (₦)"
-            type="number"
-            placeholder="0.00"
-            value={depositForm.amount}
-            onChange={(e) =>
-              setDepositForm((f) => ({ ...f, amount: e.target.value }))
-            }
-          />
-          <Button
-            loading={formLoading}
-            onClick={handleDeposit}
-            className="w-full"
-          >
-            Deposit
-          </Button>
-        </div>
-      </Modal>
+      <DepositModal
+        accountOptions={accountOptions}
+        depositForm={depositForm}
+        setDepositForm={setDepositForm}
+        setShowDeposit={setShowDeposit}
+        showDeposit={showDeposit}
+        fetchData={fetchData}
+        formLoading={formLoading}
+        setFormLoading={setFormLoading}
+      />
 
-      <Modal
-        open={showTransfer}
-        onClose={() => setShowTransfer(false)}
-        title="Transfer Funds"
-      >
-        <div className="space-y-4">
-          <Select
-            label="From Account"
-            options={[
-              { value: "", label: "Select account..." },
-              ...accountOptions,
-            ]}
-            value={transferForm.fromAccountId}
-            onChange={(e) =>
-              setTransferForm((f) => ({ ...f, fromAccountId: e.target.value }))
-            }
-          />
-          <Input
-            label="To Account ID"
-            placeholder="Recipient account ID"
-            value={transferForm.toAccountId}
-            onChange={(e) =>
-              setTransferForm((f) => ({ ...f, toAccountId: e.target.value }))
-            }
-          />
-          <Input
-            label="Amount"
-            type="number"
-            placeholder="0.00"
-            value={transferForm.amount}
-            onChange={(e) =>
-              setTransferForm((f) => ({ ...f, amount: e.target.value }))
-            }
-          />
-          <Input
-            label="Description (optional)"
-            placeholder="What's this for?"
-            value={transferForm.description}
-            onChange={(e) =>
-              setTransferForm((f) => ({ ...f, description: e.target.value }))
-            }
-          />
-          <Button
-            loading={formLoading}
-            onClick={handleTransfer}
-            className="w-full"
-          >
-            Send Transfer
-          </Button>
-        </div>
-      </Modal>
+      <TransferModal
+        accountOptions={accountOptions}
+        fetchData={fetchData}
+        formLoading={formLoading}
+        setFormLoading={setFormLoading}
+        setShowTransfer={setShowTransfer}
+        showTransfer={showTransfer}
+      />
     </AppShell>
   );
 }
