@@ -146,3 +146,111 @@ export const authApi = {
   logout: () => api.post("/auth/logout"),
 };
 
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+export const usersApi = {
+  me: () => api.get("/users/me"),
+  list: (page = 1, limit = 20) => api.get(`/users?page=${page}&limit=${limit}`),
+  deactivate: (id: string) => api.patch(`/users/${id}/deactivate`),
+};
+
+// ─── Accounts ─────────────────────────────────────────────────────────────────
+
+export const accountsApi = {
+  create: (body: { currency: string; name?: string }) =>
+    api.post("/accounts", body),
+  list: () => api.get("/accounts"),
+  get: (id: string) => api.get(`/accounts/${id}`),
+  freeze: (id: string) => api.patch(`/accounts/${id}/freeze`),
+  unfreeze: (id: string) => api.patch(`/accounts/${id}/unfreeze`),
+};
+
+// ─── Transactions ─────────────────────────────────────────────────────────────
+
+export const transactionsApi = {
+  transfer: (body: {
+    fromAccountId: string;
+    toAccountId: string;
+    amount: number;
+    description?: string;
+    idempotencyKey?: string;
+  }) =>
+    api.post("/transactions/transfer", body, {
+      headers: body.idempotencyKey
+        ? { "Idempotency-Key": body.idempotencyKey }
+        : {},
+    }),
+  deposit: (body: {
+    accountId: string;
+    amount: number;
+    description?: string;
+  }) => api.post("/transactions/deposit", body),
+  withdraw: (body: {
+    accountId: string;
+    amount: number;
+    description?: string;
+  }) => api.post("/transactions/withdraw", body),
+  history: (accountId: string, page = 1, limit = 20) =>
+    api.get(`/transactions/account/${accountId}?page=${page}&limit=${limit}`),
+  getByRef: (ref: string) => api.get(`/transactions/ref/${ref}`),
+};
+
+// ─── Wallets ──────────────────────────────────────────────────────────────────
+
+export const walletsApi = {
+  limits: (accountId: string) =>
+    api.get(`/wallets/account/${accountId}/limits`),
+  upgrade: (accountId: string, body: { tier: string }) =>
+    api.patch(`/wallets/account/${accountId}/upgrade`, body),
+};
+
+// ─── KYC ──────────────────────────────────────────────────────────────────────
+
+export const kycApi = {
+  submit: (body: object) => api.post("/kyc/submit", body),
+  me: () => api.get("/kyc/me"),
+  pending: () => api.get("/kyc/pending"),
+  review: (id: string, body: { status: string; note?: string }) =>
+    api.patch(`/kyc/${id}/review`, body),
+};
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export const notificationsApi = {
+  list: (page = 1, limit = 20) =>
+    api.get(`/notifications?page=${page}&limit=${limit}`),
+  unreadCount: () => api.get("/notifications/unread-count"),
+  read: (id: string) => api.patch(`/notifications/${id}/read`),
+  readAll: () => api.patch("/notifications/read-all"),
+};
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+export const adminApi = {
+  stats: () => api.get("/admin/stats"),
+  userGrowth: () => api.get("/admin/user-growth"),
+};
+
+// ─── Statements ───────────────────────────────────────────────────────────────
+
+export const statementsApi = {
+  csv: (accountId: string) =>
+    api.get(`/statements/${accountId}/csv`, { responseType: "blob" }),
+};
+
+// ─── Beneficiaries ────────────────────────────────────────────────────────────
+
+export const beneficiariesApi = {
+  list: () => api.get("/beneficiaries"),
+  create: (body: object) => api.post("/beneficiaries", body),
+  delete: (id: string) => api.delete(`/beneficiaries/${id}`),
+};
+
+// ─── Transaction PIN ──────────────────────────────────────────────────────────
+
+export const pinApi = {
+  set: (body: { pin: string }) => api.post("/transaction-pin/set", body),
+  change: (body: { oldPin: string; newPin: string }) =>
+    api.patch("/transaction-pin/change", body),
+  verify: (body: { pin: string }) => api.post("/transaction-pin/verify", body),
+};
