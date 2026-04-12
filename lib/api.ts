@@ -157,7 +157,7 @@ export const usersApi = {
 // ─── Accounts ─────────────────────────────────────────────────────────────────
 
 export const accountsApi = {
-  create: (body: { currency: string; name?: string }) =>
+  create: (body: { currency: string; type?: string }) =>
     api.post("/accounts", body),
   list: () => api.get("/accounts"),
   get: (id: string) => api.get(`/accounts/${id}`),
