@@ -285,12 +285,7 @@ export default function AdminPage() {
                 href: "/admin/kyc",
                 color: "var(--gold)",
               },
-              {
-                label: "Platform Health",
-                desc: "System status & uptime",
-                href: "/api/health",
-                color: "var(--green)",
-              },
+            
             ].map(({ label, desc, href, color }) => (
               <a
                 key={label}
