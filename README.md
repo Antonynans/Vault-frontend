@@ -3,13 +3,9 @@
 Production-grade Next.js 15 frontend for the [Vault API](https://github.com/Antonynans/Vault-api) — a multi-currency fintech platform.
 ---
 ## 🌍 Live Demo
-
-- **Frontend App:**  
-  👉 https://vault-app1.netlify.app/
-
-- **API Docs (Swagger):**  
-  👉 https://vault-api-sbav.onrender.com/api/docs
-
+[![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge&logo=vercel)](https://vault-app1.netlify.app/)
+[![API Docs](https://img.shields.io/badge/API-Swagger-blue?style=for-the-badge&logo=swagger)](https://vault-api-sbav.onrender.com/api/docs)
+[![Backend Repo](https://img.shields.io/badge/Backend-Repository-black?style=for-the-badge&logo=github)](https://github.com/Antonynans/Vault-api)
 ## Tech Stack
 
 | Layer     | Technology                              |
